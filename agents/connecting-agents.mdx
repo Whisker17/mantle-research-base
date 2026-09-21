@@ -37,9 +37,10 @@ You can create an agent token either from the Whisker dashboard or directly via 
 
 If you are automating token provisioning, you can create agent tokens programmatically using your user API key.
 
-```json
+```http
 POST /api/v1/agents/token
 Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
 
 {
   "name": "Claude Research Assistant",
@@ -84,12 +85,13 @@ You can connect Whisker to any LLM that supports tool use or custom API calls. T
 2. Tell the model it has access to a knowledge base and should call the tool to retrieve relevant context before answering.
 3. The model fetches documents from Whisker and uses their content to ground its response.
 
-Here is a Python example that retrieves a specific document using an agent token:
+Here is a Python example that retrieves a specific document using an agent token stored in an environment variable:
 
 ```python
+import os
 import requests
 
-token = "AGT_your_agent_token_here"
+token = os.environ["WHISKER_AGENT_TOKEN"]
 headers = {"Authorization": f"Bearer {token}"}
 
 response = requests.get(
@@ -101,8 +103,81 @@ document = response.json()
 print(document["content"])
 ```
 
-You can extend this pattern to list collections, search for relevant documents, or fetch multiple documents and concatenate their content before passing it to your LLM.
+You can extend this pattern to list collections, retrieve documents by collection, or fetch multiple documents and concatenate their content before passing it to your LLM.
 
 <Warning>
   Never hard-code agent tokens in your source code or commit them to version control. Store them in environment variables or a secrets manager and read them at runtime. If a token is ever exposed, revoke it immediately from **Settings → Agent Tokens** and generate a replacement.
 </Warning>
+
+## Managing Agent Tokens
+
+### Listing Existing Tokens
+
+To see all agent tokens on your account — including their names, scopes, and creation dates — call the tokens list endpoint with your user API key.
+
+```http
+GET /api/v1/agents/tokens
+Authorization: Bearer YOUR_API_KEY
+```
+
+**Response:**
+
+```json
+{
+  "tokens": [
+    {
+      "id": "agt_tok_xyz789",
+      "name": "Claude Research Assistant",
+      "access": "read",
+      "collection_ids": ["col_abc123", "col_def456"],
+      "created_at": "2024-11-01T10:32:00Z"
+    },
+    {
+      "id": "agt_tok_abc001",
+      "name": "GPT Market Analysis Bot",
+      "access": "read",
+      "collection_ids": ["col_abc123"],
+      "created_at": "2024-10-15T08:00:00Z"
+    }
+  ]
+}
+```
+
+<Note>
+  The raw token value is never returned by this endpoint — only metadata. If you need to reissue credentials, revoke the existing token and create a new one.
+</Note>
+
+### Revoking a Token
+
+To permanently revoke an agent token, send a DELETE request with the token's `id`. Revoked tokens are immediately invalidated — any agent using that token will receive a `401 Unauthorized` error on its next request.
+
+```http
+DELETE /api/v1/agents/tokens/agt_tok_xyz789
+Authorization: Bearer YOUR_API_KEY
+```
+
+A successful revocation returns a `204 No Content` response with no body.
+
+## Agent Self-Identification
+
+An agent can verify its own identity and inspect its assigned scopes at any time by calling the self-identification endpoint. This is useful for agents that need to confirm which collections they can access before making further requests.
+
+```http
+GET /api/v1/agents/me
+Authorization: Bearer AGT_your_agent_token_here
+```
+
+**Response:**
+
+```json
+{
+  "id": "agt_tok_xyz789",
+  "name": "Claude Research Assistant",
+  "access": "read",
+  "collection_ids": ["col_abc123", "col_def456"]
+}
+```
+
+<Tip>
+  Call `GET /agents/me` at the start of your agent's session to dynamically discover which collections are in scope, rather than hard-coding collection IDs in your agent logic.
+</Tip>

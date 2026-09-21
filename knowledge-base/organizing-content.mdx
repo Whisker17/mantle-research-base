@@ -1,5 +1,5 @@
 ---
-title: "Organizing Your Knowledge Base with Collections"
+title: "Organizing Your Whisker Knowledge Base with Collections"
 sidebarTitle: "Organizing Content"
 description: "Use collections to group related research documents and reports in Whisker, making them easier to navigate and share with AI agents."
 ---
@@ -83,10 +83,10 @@ You can move documents between collections at any time without losing their cont
 
 **In the UI:** Open the document, click the **⋯ More** menu, and select **Move to Collection**. Choose the destination collection from the picker and confirm.
 
-**Via the API:** Update the document's `collection_id` with a `PATCH` request:
+**Via the API:** Update the document's `collection_id` with a `PUT` request:
 
 ```http
-PATCH /api/v1/documents/doc_xyz789
+PUT /api/v1/documents/doc_xyz789
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 ```

@@ -1,5 +1,5 @@
 ---
-title: "Sharing Collections and Documents with Others"
+title: "Sharing Collections and Documents with External Users"
 sidebarTitle: "Sharing"
 description: "Generate shareable links for Whisker collections and documents to provide controlled access without requiring recipients to have an account."
 ---
@@ -37,29 +37,55 @@ When creating a shareable link, you can choose from three access levels:
 
 You can combine options — for example, a password-protected link that also expires on a specific date.
 
-## Generating a Share Link via API
+## Managing Share Settings via API
+
+Use `PUT /permissions/{resource_id}` to configure share link access for a collection or document programmatically. Set `"link_sharing"` to `"public"` to generate an open link, or include a `"link_password"` and `"link_expires_at"` to add further restrictions.
+
+**Enable a public share link:**
 
 ```http
-POST /api/v1/documents/doc_abc123/share
+PUT /api/v1/permissions/doc_abc123
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 
 {
-  "access": "link",
-  "expires_at": "2025-12-31T23:59:59Z"
+  "link_sharing": "public"
 }
 ```
-
-A successful response returns the shareable URL:
 
 ```json
 {
+  "resource_id": "doc_abc123",
+  "link_sharing": "public",
   "share_url": "https://app.whisker.io/share/lnk_def456",
-  "expires_at": "2025-12-31T23:59:59Z"
+  "link_expires_at": null
 }
 ```
 
-To generate a password-protected share link via the API, include a `"password"` field in the request body alongside `"access"` and `"expires_at"`.
+**Enable a password-protected, expiring share link:**
+
+```http
+PUT /api/v1/permissions/doc_abc123
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "link_sharing": "password",
+  "link_password": "review-2025",
+  "link_expires_at": "2025-12-31T23:59:59Z"
+}
+```
+
+```json
+{
+  "resource_id": "doc_abc123",
+  "link_sharing": "password",
+  "share_url": "https://app.whisker.io/share/lnk_def456",
+  "link_expires_at": "2025-12-31T23:59:59Z"
+}
+```
+
+Replace `doc_abc123` with your document ID, or use a collection ID (e.g., `col_abc123`) to share an entire collection.
 
 ## Revoking a Share Link
 
@@ -69,12 +95,47 @@ Open the **Share** menu on the collection or document, find the active link, and
 
 **Via the API:**
 
+Disable sharing entirely by setting `"link_sharing"` to `"disabled"`:
+
 ```http
-DELETE /api/v1/documents/doc_abc123/share/lnk_def456
+PUT /api/v1/permissions/doc_abc123
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "link_sharing": "disabled"
+}
+```
+
+```json
+{
+  "resource_id": "doc_abc123",
+  "link_sharing": "disabled",
+  "share_url": null
+}
+```
+
+Once revoked, any previously shared link becomes inactive immediately. You will need to re-enable sharing to generate a new link.
+
+## Viewing Current Share Settings
+
+To check whether sharing is currently enabled on a resource and retrieve the active share URL, use `GET /permissions/{resource_id}`:
+
+```http
+GET /api/v1/permissions/doc_abc123
 Authorization: Bearer YOUR_API_KEY
 ```
 
-Replace `doc_abc123` with your document ID and `lnk_def456` with the share link ID returned when you created the link. Once revoked, the link cannot be reactivated — you'll need to generate a new one.
+```json
+{
+  "resource_id": "doc_abc123",
+  "link_sharing": "public",
+  "share_url": "https://app.whisker.io/share/lnk_def456",
+  "link_expires_at": null,
+  "password_protected": false,
+  "members": []
+}
+```
 
 <Note>
   Share links are designed for human recipients. If you need an AI agent to

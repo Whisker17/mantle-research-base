@@ -1,5 +1,5 @@
 ---
-title: "Roles and Permissions: Owner, Editor, and Viewer"
+title: "Roles and Permissions: Owner, Editor, and Viewer Roles"
 sidebarTitle: "Roles"
 description: "Assign Owner, Editor, or Viewer roles to team members in Whisker to control who can read, edit, or manage your research collections."
 ---
@@ -39,12 +39,40 @@ Every collection has at least one Owner. You can have multiple Owners on the sam
 
 **Via the API:**
 
+To view the current members and roles on a resource, use the `GET /permissions/{resource_id}` endpoint:
+
+```http
+GET /api/v1/permissions/col_abc123
+Authorization: Bearer YOUR_API_KEY
+```
+
+```json
+{
+  "resource_id": "col_abc123",
+  "password_protected": false,
+  "members": [
+    { "user_id": "usr_owner01", "role": "owner" },
+    { "user_id": "usr_xyz789", "role": "viewer" }
+  ]
+}
+```
+
+To add a member or update an existing member's role, use `PUT /permissions/{resource_id}/members`:
+
 ```http
 PUT /api/v1/permissions/col_abc123/members
 Authorization: Bearer YOUR_API_KEY
 Content-Type: application/json
 
 {
+  "user_id": "usr_xyz789",
+  "role": "viewer"
+}
+```
+
+```json
+{
+  "resource_id": "col_abc123",
   "user_id": "usr_xyz789",
   "role": "viewer"
 }
@@ -75,7 +103,7 @@ DELETE /api/v1/permissions/col_abc123/members/usr_xyz789
 Authorization: Bearer YOUR_API_KEY
 ```
 
-Replace `col_abc123` with the resource ID and `usr_xyz789` with the user ID of the member you're revoking. The change takes effect immediately — the user will lose access on their next request.
+A successful response returns `204 No Content`. Replace `col_abc123` with the resource ID and `usr_xyz789` with the user ID of the member you're revoking. The change takes effect immediately — the user will lose access on their next request.
 
 <Tip>
   Use the **Viewer** role for stakeholders who only need to read reports and

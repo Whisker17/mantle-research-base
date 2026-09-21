@@ -1,7 +1,7 @@
 ---
 title: "Reading Documents and Collections via the Agent API"
 sidebarTitle: "Reading Content"
-description: "Use Whisker's REST API to list collections, retrieve documents, and search content from your AI agent or LLM pipeline."
+description: "Use Whisker's REST API to list accessible collections, retrieve documents by ID, and read content from your AI agent or LLM pipeline."
 ---
 
 Agents interact with Whisker entirely through the REST API, using their agent token to authenticate each request. Every response is structured JSON, and all document content is returned as plain text or Markdown — ready to be fed directly into an LLM prompt without any preprocessing.
@@ -52,9 +52,55 @@ Authorization: Bearer AGT_your_agent_token
   ISO 8601 timestamp of the most recent change to the collection.
 </ResponseField>
 
+## Listing All Documents
+
+To retrieve a flat list of all documents your agent token can access — across all permitted collections — use the documents endpoint. This is useful when your agent needs a complete inventory rather than browsing collection by collection.
+
+```http
+GET /api/v1/documents
+Authorization: Bearer AGT_your_agent_token
+```
+
+**Response:**
+
+```json
+{
+  "documents": [
+    {
+      "id": "doc_abc123",
+      "title": "Q3 Consumer Sentiment Report",
+      "format": "markdown",
+      "collection_id": "col_abc123",
+      "size": 18432,
+      "updated_at": "2024-10-20T11:30:00Z"
+    },
+    {
+      "id": "doc_ghi789",
+      "title": "Global Market Trends Overview",
+      "format": "markdown",
+      "collection_id": "col_abc123",
+      "size": 31200,
+      "updated_at": "2024-08-18T14:22:00Z"
+    }
+  ]
+}
+```
+
+<ResponseField name="collection_id" type="string">
+  The ID of the collection this document belongs to. Use this to group results or make a follow-up request to retrieve the parent collection.
+</ResponseField>
+
+<ResponseField name="size" type="integer">
+  The size of the document content in bytes. Use this to estimate context-window usage before fetching the full content.
+</ResponseField>
+
+<Tip>
+  Use the `page` and `per_page` query parameters to paginate large result sets. For example: `GET /api/v1/documents?page=2&per_page=20`. The default page size is 20 documents per request.
+</Tip>
+
 ## Listing Documents in a Collection
 
-Once you have a collection ID, you can list all documents inside it.
+Once you have a collection ID, you can list all documents inside that specific collection. This is ideal when your agent is focused on a single topic area or project.
 
 ```http
 GET /api/v1/collections/col_abc123/documents
@@ -121,56 +167,6 @@ Authorization: Bearer AGT_your_agent_token
 
 <ResponseField name="collection_id" type="string">
   The ID of the collection this document belongs to.
-</ResponseField>
-
-## Searching Documents
-
-Use the search endpoint to find documents relevant to a query. You can search across all accessible collections or scope the search to a single collection.
-
-```http
-GET /api/v1/documents/search?q=market+analysis&collection_id=col_abc123
-Authorization: Bearer AGT_your_agent_token
-```
-
-<ParamField query="q" type="string" required>
-  The search query. Whisker supports both keyword and semantic (vector) search — the most relevant results are returned first.
-</ParamField>
-
-<ParamField query="collection_id" type="string">
-  Restrict the search to a specific collection. Omit this parameter to search across all collections the token can access.
-</ParamField>
-
-**Response:**
-
-```json
-{
-  "results": [
-    {
-      "id": "doc_abc123",
-      "title": "APAC Market Entry Analysis",
-      "relevance_score": 0.94,
-      "excerpt": "...the APAC market analysis indicates strong growth potential in the mid-tier consumer segment, particularly in...",
-      "collection_id": "col_abc123",
-      "updated_at": "2024-09-05T08:00:00Z"
-    },
-    {
-      "id": "doc_ghi789",
-      "title": "Global Market Trends Overview",
-      "relevance_score": 0.81,
-      "excerpt": "...cross-market analysis reveals consistent demand patterns that align with the broader trends identified in...",
-      "collection_id": "col_abc123",
-      "updated_at": "2024-08-18T14:22:00Z"
-    }
-  ]
-}
-```
-
-<ResponseField name="relevance_score" type="float">
-  A score between 0 and 1 indicating how closely the document matches your query. Results are sorted highest to lowest.
-</ResponseField>
-
-<ResponseField name="excerpt" type="string">
-  A short snippet of the most relevant passage in the document, useful for deciding whether to fetch the full content.
 </ResponseField>
 
 ## Content Formats

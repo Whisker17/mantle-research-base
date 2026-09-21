@@ -1,5 +1,5 @@
 ---
-title: "Get Started with Whisker in Minutes"
+title: "Quickstart: Create Documents and Connect an AI Agent"
 sidebarTitle: "Quickstart"
 description: "Create your Whisker account, upload your first document, set access permissions, and connect an AI agent — all in under 10 minutes."
 ---
@@ -29,9 +29,8 @@ This guide walks you through everything you need to go from a brand-new account 
     **API upload** — Use the Whisker API to programmatically add documents from your own systems:
 
     ```bash
-    curl -X POST https://api.whisker.app/v1/documents \
+    curl -X POST https://api.whisker.app/v1/documents/upload \
       -H "Authorization: Bearer YOUR_API_KEY" \
-      -H "Content-Type: multipart/form-data" \
       -F "file=@report.pdf" \
       -F "collection_id=col_abc123" \
       -F "title=Q3 Market Research Report"

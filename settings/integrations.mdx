@@ -1,0 +1,84 @@
+---
+title: "Integrations: Connect Whisker to Your Workflow"
+sidebarTitle: "Integrations"
+description: "Connect Whisker to external tools like Notion, Slack, and GitHub to sync research content and automate your knowledge management workflow."
+---
+
+Integrations extend Whisker's capabilities by connecting it to the tools you already use — letting you sync content automatically, receive real-time notifications, and build automated pipelines without manual copy-pasting. You can manage all integrations from **Workspace Settings > Integrations**.
+
+## Available Integrations
+
+<CardGroup cols={2}>
+  <Card title="Notion" icon="n">
+    Sync pages and databases from your Notion workspace directly into Whisker collections. Keep your research in one place without duplicating work.
+  </Card>
+  <Card title="GitHub" icon="github">
+    Pull markdown files from any GitHub repository into Whisker. Ideal for syncing documentation, research notes, or README files alongside your codebase.
+  </Card>
+  <Card title="Slack" icon="slack">
+    Receive Slack notifications when documents are created, updated, or shared. Keep your team informed without leaving your messaging app.
+  </Card>
+  <Card title="Zapier" icon="bolt">
+    Connect Whisker to 5,000+ apps through Zapier's no-code automation platform. Trigger actions based on Whisker events or push content in from other tools.
+  </Card>
+</CardGroup>
+
+## Setting Up an Integration
+
+The setup flow is consistent across all integrations. The specific authorization screens and configuration options vary by service.
+
+<Steps>
+  <Step title="Open Integrations settings">
+    Go to **Workspace Settings > Integrations**.
+  </Step>
+  <Step title="Find and connect the integration">
+    Locate the integration you want to enable and click **Connect**.
+  </Step>
+  <Step title="Authorize access">
+    You'll be redirected to the external service's authorization page. Log in if prompted and grant Whisker the permissions it needs to read or write data on your behalf.
+  </Step>
+  <Step title="Configure sync settings">
+    Back in Whisker, choose which data to sync — for example, which Notion workspace, GitHub repository, or Slack channel to connect. Set sync frequency if applicable.
+  </Step>
+  <Step title="Save and activate">
+    Click **Save** to activate the integration. The first sync will begin shortly, and subsequent syncs will run on the schedule you configured.
+  </Step>
+</Steps>
+
+To disconnect an integration, click the **⋯** menu next to it and select **Disconnect**. Existing synced content remains in Whisker but will no longer update automatically.
+
+## Webhooks
+
+Webhooks let you build custom integrations by having Whisker push event notifications to any HTTPS endpoint you control — your own server, a cloud function, or a third-party automation platform.
+
+**To register a webhook endpoint**, go to **Workspace Settings > Integrations > Webhooks** and click **Add Endpoint**. Enter your endpoint URL and select the events you want to subscribe to.
+
+**Supported events:**
+
+| Event | Description |
+|-------|-------------|
+| `document.created` | A new document was added to the workspace. |
+| `document.updated` | An existing document's content or metadata changed. |
+| `document.deleted` | A document was permanently deleted. |
+| `collection.created` | A new collection was created in the workspace. |
+
+**Example webhook payload:**
+
+```json
+{
+  "event": "document.created",
+  "timestamp": "2025-01-15T10:30:00Z",
+  "workspace_id": "ws_abc123",
+  "data": {
+    "document_id": "doc_xyz789",
+    "title": "Q1 Research Report",
+    "collection_id": "col_def456"
+  }
+}
+```
+
+Whisker signs every webhook request with an `X-Whisker-Signature` header so your endpoint can verify the payload came from Whisker. See the [API Overview](/api/overview) for signature verification details.
+
+<Tip>
+  If you're running AI agent pipelines, webhooks are the most reliable way to trigger re-indexing when content changes. Subscribe your pipeline to `document.created` and `document.updated` events so agents always work with the latest knowledge — no polling required.
+</Tip>

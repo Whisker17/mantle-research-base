@@ -1,0 +1,120 @@
+---
+title: "Creating and Editing Content in Whisker"
+sidebarTitle: "Creating Content"
+description: "Add research notes, reports, and documents to your Whisker knowledge base using the editor, file upload, or REST API."
+---
+
+Whisker gives you three flexible ways to add content to your knowledge base: the in-app editor for writing directly in the browser, file upload for importing existing documents, and the REST API for programmatic ingestion. Choose the approach that fits your workflow — or combine all three to keep your research organized and accessible.
+
+## Using the Editor
+
+The in-app editor lets you create and format documents without leaving Whisker. It supports both **Markdown** and **rich text** modes, so you can write in whichever format feels natural.
+
+<Steps>
+  <Step title="Open the editor">
+    From your dashboard, click **New Document** in the top-right corner or inside any collection.
+  </Step>
+  <Step title="Choose a format">
+    Select **Markdown** for plain-text authoring or **Rich Text** for a visual, WYSIWYG experience. You can switch between modes at any time.
+  </Step>
+  <Step title="Write your content">
+    Use the toolbar or Markdown syntax to add headings, lists, code blocks, tables, and inline formatting.
+  </Step>
+  <Step title="Save and publish">
+    Click **Save** to store a draft, or **Publish** to make the document available to users and AI agents with access to the collection.
+  </Step>
+</Steps>
+
+## Supported File Types
+
+You can upload or import the following file types into Whisker:
+
+| Format    | Extension | Notes                              |
+|-----------|-----------|------------------------------------|
+| Markdown  | `.md`     | Native format; best AI readability |
+| Plain text | `.txt`   | Imported as-is                     |
+| PDF       | `.pdf`    | Text is extracted on ingestion     |
+| Word      | `.docx`   | Converted to structured text       |
+| HTML      | `.html`   | Tags stripped; content preserved   |
+
+## Via the API
+
+You can create documents programmatically using the `POST /api/v1/documents` endpoint. This is ideal for automated pipelines, CI-driven report publishing, or bulk ingestion from external tools.
+
+```http
+POST /api/v1/documents
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+```json
+{
+  "title": "Q3 Research Report",
+  "content": "## Summary\nThis report covers...",
+  "collection_id": "col_abc123",
+  "format": "markdown"
+}
+```
+
+A successful request returns a `201 Created` response with the new document's details:
+
+```json
+{
+  "id": "doc_xyz789",
+  "title": "Q3 Research Report",
+  "created_at": "2024-10-15T09:32:00Z",
+  "collection_id": "col_abc123",
+  "format": "markdown",
+  "status": "ready"
+}
+```
+
+<ResponseField name="id" type="string">
+  Unique identifier for the document. Use this in subsequent API calls.
+</ResponseField>
+
+<ResponseField name="title" type="string">
+  The title you provided at creation time.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the document was created.
+</ResponseField>
+
+<Tip>
+  Use Markdown as your default format whenever possible. Markdown documents are parsed into clean, structured text that AI agents can traverse efficiently — headings become semantic anchors, and lists and code blocks are preserved with their meaning intact.
+</Tip>
+
+## Editing Existing Documents
+
+You can update any document you have write access to, either through the UI or the API.
+
+**In the UI:** Open the document, click the **Edit** button in the top-right corner, make your changes, and click **Save**. Whisker tracks a full revision history so you can roll back to any previous version.
+
+**Via the API:** Send a `PUT` request to `/api/v1/documents/{id}` with the fields you want to update:
+
+```http
+PUT /api/v1/documents/doc_xyz789
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+```
+
+```json
+{
+  "title": "Q3 Research Report (Revised)",
+  "content": "## Summary\nThis updated report covers..."
+}
+```
+
+```json
+{
+  "id": "doc_xyz789",
+  "title": "Q3 Research Report (Revised)",
+  "updated_at": "2024-10-20T14:05:00Z",
+  "status": "ready"
+}
+```
+
+<Note>
+  Editing a document does not change its `id` or `collection_id`. Any AI agents or integrations referencing the document by ID will automatically see the updated content on their next read.
+</Note>

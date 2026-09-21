@@ -1,0 +1,85 @@
+---
+title: "Roles and Permissions: Owner, Editor, and Viewer"
+sidebarTitle: "Roles"
+description: "Assign Owner, Editor, or Viewer roles to team members in Whisker to control who can read, edit, or manage your research collections."
+---
+
+Role-based access gives you structured, long-term control over who can do what in your Whisker workspace. Rather than relying on shared passwords, you assign individual users a role on a specific collection or document — and Whisker enforces the corresponding permissions automatically. This is the recommended approach for managing access across your team.
+
+## Available Roles
+
+Whisker provides three roles, each with a distinct set of capabilities:
+
+| Role | What they can do |
+|------|-----------------|
+| **Owner** | Full control: create, edit, and delete documents; manage permissions; invite and remove members; delete the collection itself. |
+| **Editor** | Create and edit documents within the collection. Cannot manage permissions, invite members, or delete the collection. |
+| **Viewer** | Read-only access. Can view and download documents but cannot make any changes. |
+
+Every collection has at least one Owner. You can have multiple Owners on the same collection.
+
+## Assigning Roles
+
+**From the UI:**
+
+<Steps>
+  <Step title="Open the collection or document">
+    Navigate to the resource you want to share.
+  </Step>
+  <Step title="Go to Members settings">
+    Click **Settings** from the action menu, then select the **Members** tab.
+  </Step>
+  <Step title="Invite a member">
+    Enter the user's email address or Whisker username and select the role you want to assign.
+  </Step>
+  <Step title="Send the invitation">
+    Click **Invite**. The user will receive a notification and can access the resource immediately upon accepting.
+  </Step>
+</Steps>
+
+**Via the API:**
+
+```http
+PUT /api/v1/permissions/col_abc123/members
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "user_id": "usr_xyz789",
+  "role": "viewer"
+}
+```
+
+Valid values for `role` are `"owner"`, `"editor"`, and `"viewer"`. You can update an existing member's role by sending another request with the new role value — no need to remove and re-add them.
+
+## Inheriting Permissions
+
+Permissions cascade from the workspace level down to individual documents:
+
+- **Workspace-level roles** apply across all collections and documents in the workspace. A user with a workspace-level Editor role can edit any collection they haven't been explicitly restricted from.
+- **Collection-level roles** apply to all documents inside that collection. They override workspace-level roles for that collection when the collection-level setting is more restrictive or more permissive.
+- **Document-level roles** apply only to a single document and take precedence over both collection-level and workspace-level roles for that document.
+
+This hierarchy lets you set broad defaults at the workspace level and then fine-tune access for sensitive collections or documents without changing your workspace-wide settings.
+
+## Revoking Access
+
+**From the UI:**
+
+Go to the **Members** tab in the collection or document's Settings, find the member you want to remove, and click **Remove**.
+
+**Via the API:**
+
+```http
+DELETE /api/v1/permissions/col_abc123/members/usr_xyz789
+Authorization: Bearer YOUR_API_KEY
+```
+
+Replace `col_abc123` with the resource ID and `usr_xyz789` with the user ID of the member you're revoking. The change takes effect immediately — the user will lose access on their next request.
+
+<Tip>
+  Use the **Viewer** role for stakeholders who only need to read reports and
+  findings. It prevents accidental edits while still giving them full access
+  to download and reference your research — no need to export and email files
+  separately.
+</Tip>

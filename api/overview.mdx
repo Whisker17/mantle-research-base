@@ -1,0 +1,152 @@
+---
+title: "Whisker REST API Overview and Base URL"
+sidebarTitle: "Overview"
+description: "The Whisker REST API lets you manage documents, collections, permissions, and agent tokens programmatically. Base URL: https://api.whisker.app/v1."
+---
+
+The Whisker REST API gives you programmatic access to every resource on the platform — documents, collections, permissions, and agent tokens. All requests and responses use JSON, and every endpoint follows standard REST conventions. Whether you're building an integration, automating content workflows, or wiring up an AI agent, the API provides a consistent and predictable interface.
+
+## Base URL
+
+All API requests are made to the following base URL:
+
+```
+https://api.whisker.app/v1
+```
+
+Append the endpoint path to this base URL for every request. For example, to list documents, send a request to `https://api.whisker.app/v1/documents`.
+
+## Authentication
+
+Every request must include a valid API key or agent token as a Bearer token in the `Authorization` header:
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+API keys are used for human and integration access. Agent tokens (prefixed with `AGT_`) are scoped credentials for AI agent access. See the [Authentication](/api/authentication) page for full details on key types and best practices.
+
+## Request Format
+
+Send all request bodies as JSON and include the `Content-Type: application/json` header on every request that has a body.
+
+```http
+POST /v1/documents
+Content-Type: application/json
+Authorization: Bearer wsk_live_your_api_key_here
+
+{
+  "title": "Q3 Research Report",
+  "content": "## Summary\n\nThis report covers...",
+  "collection_id": "col_01hx9z"
+}
+```
+
+## Response Format
+
+All responses are JSON. Successful responses wrap the primary payload in a `data` key. List responses include a `meta` object with pagination details.
+
+```json
+{
+  "data": {
+    "id": "doc_01ab3f",
+    "title": "Q3 Research Report",
+    "collection_id": "col_01hx9z",
+    "created_at": "2024-11-01T12:00:00Z"
+  }
+}
+```
+
+List responses follow this structure:
+
+```json
+{
+  "data": [...],
+  "meta": {
+    "total": 84,
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
+
+## Error Responses
+
+When a request fails, the response body includes an `error` object with a machine-readable `code` and a human-readable `message`.
+
+```json
+{
+  "error": {
+    "code": "not_found",
+    "message": "The requested document does not exist."
+  }
+}
+```
+
+| Status | Code | Meaning |
+|--------|------|---------|
+| 400 | `bad_request` | Invalid or missing parameters |
+| 401 | `unauthorized` | Missing or invalid API key |
+| 403 | `forbidden` | Insufficient permissions for this resource |
+| 404 | `not_found` | Resource does not exist |
+| 429 | `rate_limited` | Too many requests — slow down and retry |
+| 500 | `server_error` | Internal server error on Whisker's side |
+
+## Rate Limits
+
+Whisker enforces per-minute rate limits based on credential type:
+
+| Credential | Limit |
+|------------|-------|
+| API Keys | 300 requests / minute |
+| Agent Tokens | 60 requests / minute |
+
+When you exceed the limit, the API returns a `429 rate_limited` response. The `Retry-After` header tells you how many seconds to wait before retrying.
+
+<Tip>
+  Agent token rate limits are intentionally conservative. If your agent workload requires higher throughput, use an API key with scoped permissions instead.
+</Tip>
+
+## Pagination
+
+All list endpoints support cursor-free page-based pagination via two query parameters:
+
+| Parameter | Default | Maximum | Description |
+|-----------|---------|---------|-------------|
+| `page` | `1` | — | The page number to retrieve |
+| `per_page` | `20` | `100` | Number of results per page |
+
+The response `meta` object always includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `meta.total` | integer | Total number of matching records |
+| `meta.page` | integer | Current page number |
+| `meta.per_page` | integer | Number of results per page |
+
+**Example paginated request:**
+
+```http
+GET /v1/documents?page=2&per_page=50
+Authorization: Bearer wsk_live_your_api_key_here
+```
+
+## Explore the API
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="/api/authentication">
+    Learn how to generate and use API keys and agent tokens.
+  </Card>
+  <Card title="Documents" icon="file-lines" href="/api/documents">
+    Create, retrieve, update, delete, and search documents.
+  </Card>
+  <Card title="Collections" icon="folder-open" href="/api/collections">
+    Organize documents into logical groupings and sub-collections.
+  </Card>
+  <Card title="Permissions" icon="lock" href="/api/permissions">
+    Set access controls, password protection, and member roles.
+  </Card>
+  <Card title="Agent Tokens" icon="robot" href="/api/agents">
+    Create and manage scoped credentials for AI agent access.
+  </Card>
+</CardGroup>

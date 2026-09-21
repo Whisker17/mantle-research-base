@@ -1,47 +1,82 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Whisker in Minutes"
+sidebarTitle: "Quickstart"
+description: "Create your Whisker account, upload your first document, set access permissions, and connect an AI agent — all in under 10 minutes."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+This guide walks you through everything you need to go from a brand-new account to a fully operational knowledge base with an AI agent reading your content. Each step takes only a minute or two, and you'll have a working setup before your coffee gets cold.
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Create your account">
+    Go to [app.whisker.app](https://app.whisker.app) and sign up with your email address. After verifying your email, you'll be prompted to name your **workspace** — this is the top-level home for all your documents and collections. Choose a name that reflects your organization or project.
 
-    ```bash
-    npm install your-package
-    ```
+    <Tip>
+      If your team is already using Whisker, ask your workspace Owner to send you an invite link instead of creating a new workspace.
+    </Tip>
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
+  <Step title="Create a Collection">
+    Collections keep your research organized. From your workspace dashboard, click **New Collection** and give it a descriptive name — for example, "Q3 Market Research" or "Clinical Trial Reports."
+
+    You can nest collections inside each other and set independent access permissions on each one. Start with at least one collection before uploading documents so your content has a home from the start.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
+
+  <Step title="Upload your first document">
+    Open your new collection and upload a document using one of two methods:
+
+    **Drag and drop** — Drag any PDF, markdown file, or plain-text document directly onto the collection page in the dashboard.
+
+    **API upload** — Use the Whisker API to programmatically add documents from your own systems:
 
     ```bash
-    your-cli start
+    curl -X POST https://api.whisker.app/v1/documents \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: multipart/form-data" \
+      -F "file=@report.pdf" \
+      -F "collection_id=col_abc123" \
+      -F "title=Q3 Market Research Report"
+    ```
+
+    Whisker processes the document and makes it searchable within a few seconds of upload.
+  </Step>
+
+  <Step title="Set access permissions">
+    By default, a new document inherits the permissions of its parent collection. To customize access, open the document and click **Permissions**.
+
+    You have two primary tools:
+
+    - **Role-based access** — Assign teammates as Viewer, Editor, or Owner of the document or collection.
+    - **Password protection** — Set a password that any user (or agent) must supply to read the document, regardless of their role.
+
+    You can combine both: require a role *and* a password for your most sensitive content.
+  </Step>
+
+  <Step title="Generate an agent token">
+    To let an AI agent read your content, you need a scoped agent token. Go to **Settings → Agent Tokens** in your workspace and click **New Token**. Give it a descriptive name (e.g., "Research Assistant – GPT"), select the collections it should be able to access, and click **Generate**.
+
+    Copy the token immediately — Whisker won't show it again.
+
+    Pass the token to your agent as a Bearer header when it calls the Whisker API:
+
+    ```bash
+    curl https://api.whisker.app/v1/documents/doc_xyz789 \
+      -H "Authorization: Bearer YOUR_AGENT_TOKEN"
+    ```
+
+    The response contains the document content in structured JSON, ready for your agent to consume:
+
+    ```json
+    {
+      "id": "doc_xyz789",
+      "title": "Q3 Market Research Report",
+      "content": "...",
+      "collection_id": "col_abc123",
+      "created_at": "2024-09-01T10:00:00Z"
+    }
     ```
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+<Note>
+  Keep your agent tokens secret. Anyone who holds a token can read every collection it's scoped to. Store tokens in environment variables or a secrets manager — never hard-code them in source files or commit them to version control.
+</Note>

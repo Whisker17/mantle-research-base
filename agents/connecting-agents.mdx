@@ -1,0 +1,108 @@
+---
+title: "Connect an AI Agent to Your Whisker Knowledge Base"
+sidebarTitle: "Connecting Agents"
+description: "Generate an agent token in Whisker and configure your AI assistant or LLM pipeline to authenticate and access your research content."
+---
+
+Connecting an AI agent to Whisker takes just a few minutes. You create a scoped agent token that grants your assistant access to specific collections, then configure your agent to include that token in its API requests. The result is an AI assistant that can read your research and reports on demand, without you having to paste content manually.
+
+## Step 1 — Create an Agent Token
+
+You can create an agent token either from the Whisker dashboard or directly via the API.
+
+### Using the Dashboard
+
+<Steps>
+  <Step title="Open Agent Token settings">
+    Go to **Settings → Agent Tokens** in your Whisker dashboard.
+  </Step>
+  <Step title="Start a new token">
+    Click **Create Token** in the top-right corner.
+  </Step>
+  <Step title="Name your token">
+    Give the token a descriptive name so you can identify it later — for example, `Claude Research Assistant` or `GPT Market Analysis Bot`.
+  </Step>
+  <Step title="Select collections">
+    Choose one or more collections this agent is allowed to access. The token will only be able to see documents inside those collections.
+  </Step>
+  <Step title="Choose an access level">
+    Select **Read Only** to allow the agent to query and retrieve content, or **Read & Write** to also allow it to create and update documents.
+  </Step>
+  <Step title="Generate and save the token">
+    Click **Generate**. Copy the token immediately and store it somewhere safe — Whisker only displays it once and cannot retrieve it again.
+  </Step>
+</Steps>
+
+### Using the API
+
+If you are automating token provisioning, you can create agent tokens programmatically using your user API key.
+
+```json
+POST /api/v1/agents/token
+Authorization: Bearer YOUR_API_KEY
+
+{
+  "name": "Claude Research Assistant",
+  "collection_ids": ["col_abc123", "col_def456"],
+  "access": "read"
+}
+```
+
+A successful response returns the new token in the `token` field:
+
+```json
+{
+  "id": "agt_tok_xyz789",
+  "name": "Claude Research Assistant",
+  "token": "AGT_xxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "access": "read",
+  "collection_ids": ["col_abc123", "col_def456"],
+  "created_at": "2024-11-01T10:32:00Z"
+}
+```
+
+<Warning>
+  Save the `token` value from the response immediately. Whisker does not store the raw token after creation — if you lose it, you will need to revoke it and generate a new one.
+</Warning>
+
+## Step 2 — Use the Token in Your Agent
+
+Once you have a token, your agent authenticates by passing it as a Bearer token in the `Authorization` header of every API request.
+
+```http
+GET /api/v1/documents
+Authorization: Bearer AGT_your_agent_token_here
+```
+
+Every endpoint in the Whisker REST API accepts agent tokens the same way it accepts user API keys. The token's permission scope determines which resources are returned.
+
+## Step 3 — Example: Using with Claude or ChatGPT
+
+You can connect Whisker to any LLM that supports tool use or custom API calls. The general pattern is:
+
+1. Define a tool or function that calls the Whisker API with your agent token.
+2. Tell the model it has access to a knowledge base and should call the tool to retrieve relevant context before answering.
+3. The model fetches documents from Whisker and uses their content to ground its response.
+
+Here is a Python example that retrieves a specific document using an agent token:
+
+```python
+import requests
+
+token = "AGT_your_agent_token_here"
+headers = {"Authorization": f"Bearer {token}"}
+
+response = requests.get(
+    "https://api.whisker.app/v1/documents/doc_abc123",
+    headers=headers
+)
+
+document = response.json()
+print(document["content"])
+```
+
+You can extend this pattern to list collections, search for relevant documents, or fetch multiple documents and concatenate their content before passing it to your LLM.
+
+<Warning>
+  Never hard-code agent tokens in your source code or commit them to version control. Store them in environment variables or a secrets manager and read them at runtime. If a token is ever exposed, revoke it immediately from **Settings → Agent Tokens** and generate a replacement.
+</Warning>

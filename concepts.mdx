@@ -1,0 +1,99 @@
+---
+title: "Core Concepts: Documents, Collections, and Permissions"
+sidebarTitle: "Concepts"
+description: "Learn the key building blocks of Whisker: documents, collections, workspaces, permissions, and agent tokens — and how they work together."
+---
+
+Whisker is built around a small set of composable concepts. Once you understand how documents, collections, workspaces, permissions, and agent tokens relate to each other, you'll be able to model even complex research environments with confidence. This page explains each concept and shows how they fit together.
+
+## Documents
+
+A **document** is the fundamental unit of content in Whisker. It represents a single piece of research material — a report, a set of notes, a PDF, a markdown file, or any other text-based asset you want to store and retrieve.
+
+Every document has:
+- A **title** and optional **description** for human-readable context.
+- A **body** — the full text content, indexed for search and returned via the API.
+- **Metadata** — creation date, author, tags, and any custom fields you define.
+- Its own **permission settings**, which can be inherited from its parent collection or set independently.
+
+Documents are always stored inside a collection. You cannot create a document at the workspace root level.
+
+## Collections
+
+A **collection** is a logical grouping of related documents, similar to a folder. Use collections to organize your research by project, topic, team, or time period — whatever structure makes sense for your workflow.
+
+Collections support:
+- **Nesting** — you can create sub-collections inside a collection for deeper hierarchies.
+- **Inherited permissions** — documents inside a collection inherit the collection's access rules by default, making it easy to control access at scale.
+- **Independent permissions** — you can override inherited rules on any individual document when you need finer control.
+
+<Tip>
+  A flat structure with a handful of well-named collections is usually easier to maintain than deep nesting. Start shallow and add sub-collections only when you genuinely need them.
+</Tip>
+
+## Workspaces
+
+A **workspace** is the top-level organizational unit in Whisker. It contains all of your collections, documents, members, and settings. Every Whisker account belongs to at least one workspace.
+
+Workspaces are designed around teams or organizations:
+- A **personal workspace** is ideal for individual researchers who want a private knowledge base.
+- An **organizational workspace** lets you invite teammates, assign roles, and share collections — all under one roof.
+
+You can belong to multiple workspaces (for example, one for your company and one for a personal project), and you switch between them from the workspace selector in the dashboard.
+
+## Permissions
+
+Whisker uses a two-layer permission model that gives you precise control over who can access what.
+
+### Role-based access
+
+Every workspace member has one of three roles assigned per document or collection:
+
+| Role    | Can read | Can edit | Can manage permissions |
+|---------|----------|----------|------------------------|
+| Viewer  | ✅       | ❌       | ❌                     |
+| Editor  | ✅       | ✅       | ❌                     |
+| Owner   | ✅       | ✅       | ✅                     |
+
+Roles can be set at the workspace level (applying broadly) or scoped to a specific collection or document (overriding the workspace default).
+
+### Password protection
+
+In addition to roles, you can apply a **password** to any document or collection. Even a user with the Viewer role must supply the correct password to open password-protected content. This is useful for sharing sensitive reports with a wider audience without expanding their workspace role.
+
+<Warning>
+  Password protection is an additional safeguard, not a replacement for role-based access. Always assign the most restrictive role appropriate for each user before adding a password.
+</Warning>
+
+## Agent Tokens
+
+An **agent token** is a special API credential you issue to an AI agent or automated system. Unlike a user's personal API key, an agent token is:
+- **Scoped to specific collections** — you choose exactly which collections the token can read when you create it.
+- **Read-only by default** — agents can retrieve document content but cannot create, edit, or delete anything unless you explicitly grant write access.
+- **Revocable at any time** — you can invalidate a token instantly from **Settings → Agent Tokens** without affecting any other credentials.
+
+Agent tokens use standard Bearer authentication, making them compatible with any HTTP client or AI framework that supports custom headers.
+
+<Info>
+  **User access vs. agent access** — When a human user reads a document, they authenticate with their account credentials and are subject to their assigned role and any workspace policies (like SSO or MFA). When an AI agent reads a document, it authenticates with an agent token and is subject only to the token's collection scope. Agent tokens do not carry a user identity, so agent reads appear in audit logs as the token name rather than a user name. This separation keeps human and machine access clean and auditable.
+</Info>
+
+## How the concepts fit together
+
+Here's a simple mental model of how everything relates:
+
+```
+Workspace
+├── Collection: "Clinical Trials"
+│   ├── Document: "Phase 2 Results"        ← Viewer: team@example.com
+│   └── Document: "Adverse Event Log"      ← Password protected + Owner only
+│
+└── Collection: "Market Research"
+    ├── Document: "Q3 Consumer Report"     ← Inherits collection permissions
+    └── Document: "Competitor Analysis"   ← Inherits collection permissions
+
+Agent Token: "Research Assistant"
+  └── Scoped to: "Market Research" (read-only)
+```
+
+In this example, your AI agent can read both documents in the "Market Research" collection but has no access to anything in "Clinical Trials". A teammate assigned as Viewer on "Clinical Trials" can read "Phase 2 Results" freely but must enter the password to open "Adverse Event Log". The permission layers stack cleanly so you can model almost any access requirement without complexity.

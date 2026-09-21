@@ -1,0 +1,302 @@
+---
+title: "Collections API: Organize Your Knowledge Base"
+sidebarTitle: "Collections"
+description: "REST API endpoints for managing Whisker collections — create, list, update, and delete logical groupings of documents."
+---
+
+Collections are the organizational layer of your Whisker knowledge base. Each collection groups related documents together and carries its own access permissions. Collections support nesting via `parent_id`, letting you build hierarchical structures like `Research / 2024 / Q3`. The Collections API lets you create, update, delete, and browse collections and their contents programmatically.
+
+---
+
+## GET /collections
+
+List all collections accessible to the caller.
+
+```http
+GET /v1/collections?page=1&per_page=20
+Authorization: Bearer wsk_live_your_api_key_here
+```
+
+**Query Parameters**
+
+<ParamField query="page" type="integer" default="1">
+  Page number to retrieve.
+</ParamField>
+
+<ParamField query="per_page" type="integer" default="20">
+  Number of collections per page. Maximum is 100.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "col_01hx9z",
+      "name": "Research Reports",
+      "description": "Quarterly and annual research outputs.",
+      "parent_id": null,
+      "document_count": 18,
+      "created_at": "2024-09-01T10:00:00Z"
+    },
+    {
+      "id": "col_03ab7y",
+      "name": "Q3 2024",
+      "description": "All research from Q3 2024.",
+      "parent_id": "col_01hx9z",
+      "document_count": 6,
+      "created_at": "2024-09-15T08:30:00Z"
+    }
+  ],
+  "meta": {
+    "total": 12,
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
+
+<ResponseField name="data" type="array">
+  Array of collection objects.
+
+  <ResponseField name="id" type="string">
+    Unique collection identifier.
+  </ResponseField>
+
+  <ResponseField name="name" type="string">
+    Display name of the collection.
+  </ResponseField>
+
+  <ResponseField name="description" type="string">
+    Optional description of the collection's contents.
+  </ResponseField>
+
+  <ResponseField name="parent_id" type="string | null">
+    ID of the parent collection, or `null` for top-level collections.
+  </ResponseField>
+
+  <ResponseField name="document_count" type="integer">
+    Number of documents directly within this collection (excludes sub-collections).
+  </ResponseField>
+
+  <ResponseField name="created_at" type="string">
+    ISO 8601 timestamp of when the collection was created.
+  </ResponseField>
+</ResponseField>
+
+---
+
+## POST /collections
+
+Create a new collection. To create a sub-collection, pass a `parent_id`.
+
+```http
+POST /v1/collections
+Authorization: Bearer wsk_live_your_api_key_here
+Content-Type: application/json
+
+{
+  "name": "Q4 2024",
+  "description": "Research and reports from Q4 2024.",
+  "parent_id": "col_01hx9z"
+}
+```
+
+**Body Parameters**
+
+<ParamField body="name" type="string" required>
+  The display name for the collection. Must be between 1 and 255 characters.
+</ParamField>
+
+<ParamField body="description" type="string">
+  An optional description of the collection's purpose or contents.
+</ParamField>
+
+<ParamField body="parent_id" type="string">
+  The ID of the parent collection. Omit this field to create a top-level collection.
+</ParamField>
+
+**Response** — `201 Created`
+
+```json
+{
+  "data": {
+    "id": "col_08mn2p",
+    "name": "Q4 2024",
+    "description": "Research and reports from Q4 2024.",
+    "parent_id": "col_01hx9z",
+    "document_count": 0,
+    "created_at": "2024-11-11T10:00:00Z"
+  }
+}
+```
+
+---
+
+## GET /collections/{id}
+
+Retrieve a single collection by its ID.
+
+```http
+GET /v1/collections/col_08mn2p
+Authorization: Bearer wsk_live_your_api_key_here
+```
+
+**Path Parameters**
+
+<ParamField path="id" type="string" required>
+  The unique ID of the collection to retrieve.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "data": {
+    "id": "col_08mn2p",
+    "name": "Q4 2024",
+    "description": "Research and reports from Q4 2024.",
+    "parent_id": "col_01hx9z",
+    "document_count": 3,
+    "created_at": "2024-11-11T10:00:00Z"
+  }
+}
+```
+
+---
+
+## PUT /collections/{id}
+
+Update a collection's name or description. Only include the fields you want to change.
+
+```http
+PUT /v1/collections/col_08mn2p
+Authorization: Bearer wsk_live_your_api_key_here
+Content-Type: application/json
+
+{
+  "name": "Q4 2024 — Final",
+  "description": "Finalized research reports from Q4 2024."
+}
+```
+
+**Path Parameters**
+
+<ParamField path="id" type="string" required>
+  The unique ID of the collection to update.
+</ParamField>
+
+**Body Parameters**
+
+<ParamField body="name" type="string">
+  New display name for the collection.
+</ParamField>
+
+<ParamField body="description" type="string">
+  New description for the collection.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "data": {
+    "id": "col_08mn2p",
+    "name": "Q4 2024 — Final",
+    "description": "Finalized research reports from Q4 2024.",
+    "parent_id": "col_01hx9z",
+    "document_count": 3,
+    "created_at": "2024-11-11T10:00:00Z"
+  }
+}
+```
+
+---
+
+## DELETE /collections/{id}
+
+Delete a collection. By default, deletion fails if the collection contains any documents. Pass `force: true` to delete the collection and all of its documents.
+
+```http
+DELETE /v1/collections/col_08mn2p
+Authorization: Bearer wsk_live_your_api_key_here
+Content-Type: application/json
+
+{
+  "force": false
+}
+```
+
+**Path Parameters**
+
+<ParamField path="id" type="string" required>
+  The unique ID of the collection to delete.
+</ParamField>
+
+**Body Parameters**
+
+<ParamField body="force" type="boolean" default="false">
+  When `true`, deletes the collection along with all documents it contains. When `false`, returns a `400 bad_request` error if the collection is not empty.
+</ParamField>
+
+**Response** — `204 No Content`
+
+An empty response body is returned on success.
+
+<Warning>
+  Passing `force: true` permanently deletes all documents in the collection. This action cannot be undone.
+</Warning>
+
+---
+
+## GET /collections/{id}/documents
+
+List all documents inside a specific collection. This is equivalent to `GET /documents?collection_id={id}` but scoped to the collection resource.
+
+```http
+GET /v1/collections/col_08mn2p/documents?page=1&per_page=20
+Authorization: Bearer wsk_live_your_api_key_here
+```
+
+**Path Parameters**
+
+<ParamField path="id" type="string" required>
+  The unique ID of the collection whose documents you want to list.
+</ParamField>
+
+**Query Parameters**
+
+<ParamField query="page" type="integer" default="1">
+  Page number to retrieve.
+</ParamField>
+
+<ParamField query="per_page" type="integer" default="20">
+  Number of documents per page. Maximum is 100.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "data": [
+    {
+      "id": "doc_07xq2m",
+      "title": "Competitive Analysis — Q4",
+      "collection_id": "col_08mn2p",
+      "format": "markdown",
+      "created_at": "2024-11-10T14:22:00Z",
+      "updated_at": "2024-11-11T08:05:00Z"
+    }
+  ],
+  "meta": {
+    "total": 3,
+    "page": 1,
+    "per_page": 20
+  }
+}
+```
+
+<Note>
+  Document content is not included in list responses. Use `GET /documents/{id}` to retrieve the full content of a specific document.
+</Note>

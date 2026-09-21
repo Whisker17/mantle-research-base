@@ -1,30 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
+  "projectType": "saas",
+  "projectName": "Whisker",
+  "projectDescription": "A secure knowledge base platform for storing research content and reports with granular access controls, designed to be readable by AI agents.",
   "theme": "almond",
-  "name": "Whisker",
-  "colors": {
-    "primary": "#ef7025",
-    "light": "#eec9bc",
-    "dark": "#4fa1ab"
-  },
-  "favicon": "/favicon.svg",
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:support@whisker.app"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Sign In",
-      "href": "https://app.whisker.app"
-    }
-  },
+  "primaryColor": "#ef7025",
+  "lightColor": "#eec9bc",
+  "darkColor": "#4fa1ab",
   "navigation": {
     "tabs": [
       {
@@ -96,7 +77,26 @@
       }
     ]
   },
-  "footer": {
-    "socials": {}
-  }
+  "keyFeatures": [
+    "Secure storage for research content and reports",
+    "Granular password and permission controls",
+    "AI agent-readable knowledge base",
+    "Document and report organization with collections",
+    "Role-based access control for team collaboration",
+    "API access for agent integrations",
+    "Workspace management for enterprise teams"
+  ],
+  "publicApiSurface": [
+    "GET /documents — list documents in a collection",
+    "POST /documents — create or upload a document",
+    "GET /documents/{id} — retrieve a document",
+    "PUT /documents/{id} — update a document",
+    "DELETE /documents/{id} — delete a document",
+    "GET /collections — list collections",
+    "POST /collections — create a collection",
+    "GET /permissions — list permissions for a resource",
+    "PUT /permissions — update permissions for a resource",
+    "POST /agents/token — generate an agent access token",
+    "GET /agents/me — get agent identity and accessible resources"
+  ]
 }

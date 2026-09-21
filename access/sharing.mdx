@@ -1,0 +1,85 @@
+---
+title: "Sharing Collections and Documents with Others"
+sidebarTitle: "Sharing"
+description: "Generate shareable links for Whisker collections and documents to provide controlled access without requiring recipients to have an account."
+---
+
+Sharing links give you a lightweight way to grant access to a collection or document without adding someone as a workspace member or managing role assignments. You generate a link and send it — the recipient clicks it and gets in, no Whisker account required. This is especially useful for one-off sharing with clients, reviewers, or anyone outside your organization.
+
+## Shareable Links
+
+You can generate a shareable link for any collection or document directly from the Whisker UI.
+
+<Steps>
+  <Step title="Open the collection or document">
+    Navigate to the resource you want to share.
+  </Step>
+  <Step title="Open the Share menu">
+    Click the **Share** button in the top-right toolbar.
+  </Step>
+  <Step title="Configure link access">
+    Choose your access level (see options below) and set any additional options such as a password or expiry date.
+  </Step>
+  <Step title="Copy the link">
+    Click **Copy Link**. The link is now active and ready to send.
+  </Step>
+</Steps>
+
+All shareable links provide **read-only** access by default. Recipients can view and download content but cannot edit or delete anything.
+
+## Link Access Options
+
+When creating a shareable link, you can choose from three access levels:
+
+- **Public** — Anyone with the link can access the resource immediately, with no additional authentication required.
+- **Password-protected link** — Recipients must enter a password before viewing the resource. The password is separate from any collection-level password protection you may have set.
+- **Expiring link** — Set an expiry date and time. After the link expires, it becomes inactive and recipients will see an access-denied message. You can extend or revoke the link at any time before it expires.
+
+You can combine options — for example, a password-protected link that also expires on a specific date.
+
+## Generating a Share Link via API
+
+```http
+POST /api/v1/documents/doc_abc123/share
+Authorization: Bearer YOUR_API_KEY
+Content-Type: application/json
+
+{
+  "access": "link",
+  "expires_at": "2025-12-31T23:59:59Z"
+}
+```
+
+A successful response returns the shareable URL:
+
+```json
+{
+  "share_url": "https://app.whisker.io/share/lnk_def456",
+  "expires_at": "2025-12-31T23:59:59Z"
+}
+```
+
+To generate a password-protected share link via the API, include a `"password"` field in the request body alongside `"access"` and `"expires_at"`.
+
+## Revoking a Share Link
+
+**From the UI:**
+
+Open the **Share** menu on the collection or document, find the active link, and click **Revoke**. The link is deactivated immediately.
+
+**Via the API:**
+
+```http
+DELETE /api/v1/documents/doc_abc123/share/lnk_def456
+Authorization: Bearer YOUR_API_KEY
+```
+
+Replace `doc_abc123` with your document ID and `lnk_def456` with the share link ID returned when you created the link. Once revoked, the link cannot be reactivated — you'll need to generate a new one.
+
+<Note>
+  Share links are designed for human recipients. If you need an AI agent to
+  programmatically access a collection or document, use an **agent token**
+  instead. Agent tokens support scoped, long-lived access and are the correct
+  mechanism for machine-to-machine access. See [Connecting Agents](/agents/connecting-agents)
+  for more details.
+</Note>

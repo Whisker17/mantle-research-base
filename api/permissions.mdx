@@ -1,0 +1,228 @@
+---
+title: "Permissions API: Control Access to Resources"
+sidebarTitle: "Permissions"
+description: "REST API endpoints to manage Whisker permissions — set password protection, assign roles, and control who can access collections and documents."
+---
+
+Whisker's permissions system lets you control exactly who can access each collection or document, and at what level. Resources can be private, shared with specific members under defined roles, password protected, or made publicly accessible. The Permissions API lets you read and update these settings programmatically, giving you fine-grained control over your knowledge base's access model.
+
+---
+
+## GET /permissions/{resource_id}
+
+Retrieve the current permission settings for a collection or document.
+
+```http
+GET /v1/permissions/col_01hx9z
+Authorization: Bearer wsk_live_your_api_key_here
+```
+
+**Path Parameters**
+
+<ParamField path="resource_id" type="string" required>
+  The ID of the collection or document to retrieve permissions for.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "data": {
+    "resource_id": "col_01hx9z",
+    "resource_type": "collection",
+    "password_protected": false,
+    "public_access": "none",
+    "members": [
+      {
+        "user_id": "usr_9a2kz1",
+        "email": "alex@example.com",
+        "role": "owner"
+      },
+      {
+        "user_id": "usr_4m7bx3",
+        "email": "jordan@example.com",
+        "role": "viewer"
+      }
+    ]
+  }
+}
+```
+
+<ResponseField name="data.resource_id" type="string">
+  The ID of the resource these permissions apply to.
+</ResponseField>
+
+<ResponseField name="data.resource_type" type="string">
+  Either `collection` or `document`.
+</ResponseField>
+
+<ResponseField name="data.password_protected" type="boolean">
+  Whether a password is required to access this resource.
+</ResponseField>
+
+<ResponseField name="data.public_access" type="string">
+  Public access level: `none` (private), `read` (anyone with the link can read), or `write` (anyone with the link can read and write).
+</ResponseField>
+
+<ResponseField name="data.members" type="array">
+  List of users with explicit access to this resource.
+
+  <ResponseField name="user_id" type="string">
+    The member's user ID.
+  </ResponseField>
+
+  <ResponseField name="email" type="string">
+    The member's email address.
+  </ResponseField>
+
+  <ResponseField name="role" type="string">
+    The member's role: `owner`, `editor`, or `viewer`.
+  </ResponseField>
+</ResponseField>
+
+---
+
+## PUT /permissions/{resource_id}
+
+Update the permission settings for a collection or document. Only include the fields you want to change.
+
+```http
+PUT /v1/permissions/col_01hx9z
+Authorization: Bearer wsk_live_your_api_key_here
+Content-Type: application/json
+
+{
+  "password_protected": true,
+  "password": "hunter2secure!",
+  "public_access": "read"
+}
+```
+
+**Path Parameters**
+
+<ParamField path="resource_id" type="string" required>
+  The ID of the collection or document to update.
+</ParamField>
+
+**Body Parameters**
+
+<ParamField body="password_protected" type="boolean">
+  Set to `true` to require a password for access. If enabling, you must also provide `password`.
+</ParamField>
+
+<ParamField body="password" type="string">
+  The password to set. Required when `password_protected` is `true`. Minimum 8 characters.
+</ParamField>
+
+<ParamField body="public_access" type="string">
+  Public access level. Accepted values: `none`, `read`, `write`.
+</ParamField>
+
+**Response**
+
+```json
+{
+  "data": {
+    "resource_id": "col_01hx9z",
+    "resource_type": "collection",
+    "password_protected": true,
+    "public_access": "read",
+    "members": [
+      {
+        "user_id": "usr_9a2kz1",
+        "email": "alex@example.com",
+        "role": "owner"
+      }
+    ]
+  }
+}
+```
+
+<Note>
+  The password value is never returned in API responses. You can only set or clear it — you cannot retrieve the current password.
+</Note>
+
+---
+
+## PUT /permissions/{resource_id}/members
+
+Add a new member or update an existing member's role on a resource. If the `user_id` already has access, their role is updated. If they don't have access yet, they are added.
+
+```http
+PUT /v1/permissions/col_01hx9z/members
+Authorization: Bearer wsk_live_your_api_key_here
+Content-Type: application/json
+
+{
+  "user_id": "usr_7c3np8",
+  "role": "editor"
+}
+```
+
+**Path Parameters**
+
+<ParamField path="resource_id" type="string" required>
+  The ID of the collection or document to update membership on.
+</ParamField>
+
+**Body Parameters**
+
+<ParamField body="user_id" type="string" required>
+  The ID of the user to add or update.
+</ParamField>
+
+<ParamField body="role" type="string" required>
+  The role to assign. Accepted values: `owner`, `editor`, `viewer`.
+
+  | Role | Permissions |
+  |------|-------------|
+  | `owner` | Full control including deleting the resource and managing permissions |
+  | `editor` | Can create, update, and delete documents within the resource |
+  | `viewer` | Read-only access |
+</ParamField>
+
+**Response**
+
+```json
+{
+  "data": {
+    "resource_id": "col_01hx9z",
+    "user_id": "usr_7c3np8",
+    "email": "sam@example.com",
+    "role": "editor"
+  }
+}
+```
+
+<Warning>
+  Only resource owners can assign the `owner` role to another user. Editors and viewers cannot modify membership.
+</Warning>
+
+---
+
+## DELETE /permissions/{resource_id}/members/{user_id}
+
+Remove a member's access to a collection or document entirely.
+
+```http
+DELETE /v1/permissions/col_01hx9z/members/usr_7c3np8
+Authorization: Bearer wsk_live_your_api_key_here
+```
+
+**Path Parameters**
+
+<ParamField path="resource_id" type="string" required>
+  The ID of the collection or document to remove access from.
+</ParamField>
+
+<ParamField path="user_id" type="string" required>
+  The ID of the user whose access should be revoked.
+</ParamField>
+
+**Response** — `204 No Content`
+
+An empty response body is returned on success.
+
+<Note>
+  You cannot remove the last `owner` of a resource. Transfer ownership to another member first before removing the current owner.
+</Note>

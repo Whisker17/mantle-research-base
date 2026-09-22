@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "almond",
-  "name": "Whisker",
+  "name": "Mantle Research",
   "colors": {
     "primary": "#ef7025",
     "light": "#eec9bc",
@@ -41,55 +41,56 @@
           {
             "group": "Knowledge Base",
             "pages": [
-              "knowledge-base/creating-content",
-              "knowledge-base/organizing-content",
-              "knowledge-base/uploading-reports"
+              {
+                "group": "Blockchain Infra",
+                "pages": [
+                  {
+                    "group": "Account Abstraction",
+                    "pages": []
+                  }
+                ]
+              },
+              {
+                "group": "产品",
+                "pages": [
+                  {
+                    "group": "mStocks",
+                    "pages": [
+                      "m-stocks"
+                    ]
+                  },
+                  {
+                    "group": "聚合器",
+                    "pages": [
+                      "untitled-page-2"
+                    ]
+                  }
+                ]
+              }
             ]
           },
           {
-            "group": "Access & Permissions",
+            "group": "Mantle V3 Roadmap",
             "pages": [
-              "access/overview",
-              "access/passwords",
-              "access/roles-and-permissions",
-              "access/sharing"
-            ]
-          },
-          {
-            "group": "AI Agent Access",
-            "pages": [
-              "agents/overview",
-              "agents/connecting-agents",
-              "agents/reading-content"
-            ]
-          },
-          {
-            "group": "Account & Settings",
-            "pages": [
-              "settings/account",
-              "settings/workspace",
-              "settings/integrations"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "Overview",
-            "pages": [
-              "api/overview",
-              "api/authentication"
-            ]
-          },
-          {
-            "group": "Endpoints",
-            "pages": [
-              "api/documents",
-              "api/collections",
-              "api/permissions",
-              "api/agents"
+              {
+                "group": "账户模型的重构",
+                "pages": [
+                  {
+                    "group": "References",
+                    "pages": [
+                      "eip-8141-vs-eip-8130"
+                    ]
+                  },
+                  "agents"
+                ]
+              },
+              {
+                "group": "执行层/状态机设计",
+                "pages": [
+                  "untitled-page"
+                ]
+              },
+              "chain-infra"
             ]
           }
         ]

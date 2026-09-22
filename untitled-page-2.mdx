@@ -1,0 +1,45 @@
+---
+title: "一种优化做市商报价的聚合器设计"
+---
+
+## 1. 背景与核心目标 
+
+目前 Mantle 上想要做的是一种接近 Hyperliquid 的币股交易体验， 那么我们想要做的就是：
+
+1. 尽可能减少 transaction latency
+2. 尽可能缩短 price spread
+3. 提供尽可能好的报价 
+
+基于上述的目标，以及对 Prop AMM 在不同链上的表现调研，我们提出了在 Mantle 上也引入 Prop AMM 的产品设计，同时针对做市商也给出了一系列链 infra 的优待策略（包括做市商的特定交易会进入 Mantle preconfs，Mantle flashblocks 的引入以及未来的更新链上状态的 precompiles 设计），这些优待主要是希望做市商能够给出更激进的做市方式，从而提出更好的报价。 
+
+而针对 Prop AMM 的特性，我们还希望引入一个 Mantle 自研的 Aggregator 来将 Mantle 链上的流动性进行统一管理（因为 Prop AMM 的高质量报价几乎只对授权的 Aggregator 开放），而传统的 Aggregator 只是简单的把当前最佳 quote 路由给用户，我们初期已经希望引入 JIT 来帮助用户避免被做市商套利，而这一点相较于其他的 aggregator 来说并没有特别的优势，用户依然依赖于高质量的做市商报价，而我们在这里提出一种聚合器内部的套利设计来让用户最终到手的价格系统性好于单纯的 best quote 
+
+### 1.2 具体机制 
+
+在把最佳 Prop AMM quote 留给用户的同时，利用其余 Prop AMM 与公开 AMM 之间瞬时存在的价差，在同一笔原子交易中自己完成套利，并把套利利润直接返利给用户。
+
+1. 用户发起兑换请求。
+2. 我们通过集成拿到所有 Prop AMM 和公开池的实时报价。
+3. 离线阶段先筛选出候选路径（以 Prop AMM 的 best quote 为主）。
+4. JIT Router 阶段（真正上链执行时）：
+
+- 最后一刻再检查 Prop AMM 当前可执行状态 + 公开池状态。
+- 如果 Prop AMM 与公开 AMM 之间仍存在可捕捉的价差，则在同一笔原子交易中同时完成：
+  - 用用户单 fill Prop AMM 的最佳 quote（给用户最好的基础价格）
+  - 对其他 Prop AMM 的 quote 也进行 fill 并完成对公开 AMM 执行套利，锁定 residual edge。
+- 把套利产生的利润直接改善用户最终到手数量（rebate / 更好执行价）。
+
+5. 整笔交易可以通过 preconfs 设置进入区块头部，最小化时间窗口。 
+
+### 1.3 为什么只有支持 JIT 的 Aggregator 能稳定做到
+
+- 只有被授权的 Aggregator 才能稳定、高质量地拿到 Prop AMM 的可执行 quote。
+- 普通 bot 或 searcher 虽然也能看到公开池和部分 Prop AMM 链上状态，但很难持续获得同等质量的报价，也无法天然绑定真实用户单。
+- JIT Router 把「决策 → 执行」窗口压到最小，显著降低 Prop AMM 在 quote 后再次修改价格的机会。
+- 我们能把「真实用户单 + residual arb」打包成原子操作，这是独立 bot 难以复制的。 
+
+### 1.4 对各方的影响
+
+- 对用户：最终有效价格优于单纯 best-quote routing，形成直接可感知的优势，吸引更多流量。
+- 对 Prop AMM：他们自己的 quote 被正常成交，本身已内置 edge，短期单笔通常可接受。我们带来额外 volume，长期只要 flow 保持相对干净，他们仍有动力继续给我们紧报价。
+- 对我们：把别人抓不到（或抓了也难以稳定返利）的 residual edge 转化为用户体验优势，形成差异化护城河。

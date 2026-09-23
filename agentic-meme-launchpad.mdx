@@ -1,0 +1,117 @@
+---
+title: "构建一个 Agentic Meme Launchpad"
+---
+
+## 1. 如何将 Agents 上升到交易的第一公民地位
+
+### 1.1 需要对 Agents 能力进行控制
+
+将 AI Agent 设为产品的第一公民，并不意味着盲目迷信当前 LLM 的自主风控能力：
+
+- **交易场景充满高危 Edge Cases**
+  - 动态滑点、夹子攻击（MEV）、预言机跳价、流动性瞬时击穿与爆仓穿仓等，都会被 LLM 的幻觉或延迟决策放大为灾难性本金损失；
+- **发币（Token Launch）是确定性极高的极简切口**
+  - 让 Agent 仅需构思世界观、生成代币名称与代码（Ticker），并调用单一发币合约，是一个输入高度收敛、状态分支极少、边界风险完全可控的原子化场景。
+
+### 1.2 严格受限的 Session Key 权限沙箱
+
+人类用户（Master Owner）将资金存入托管环境后，向 Agent 签发的不是私钥，而是一个 Session Key：
+
+1. **严格的目标合约白名单（Target Whitelist）**：
+   1. 仅限调用 `LaunchpadFactory`（发币工厂）与 `byrealRouter`（由官方验证的 Uniswap v4 路由）；
+   2. 严禁调用原生 `transfer` 或任意未经审核的外部 ERC-20 资产合约，杜绝 Agent 被 Prompt 注入后将资金转入黑客地址。
+2. **函数选择器约束（Selector Whitelist）**：
+   1. **发币权限**：开放极简的发币方法（如 `launch(string name, string symbol)`），底层合约自动注入预设曲线参数，无需 Agent 进行复杂的流动性配置；
+   2. **交易权限**：**必须开放受控的买卖与领费接口**（如 `buyExactQuote(...)`、`sellExactToken(...)`、`claimFee(...)`），使 Agent 具备为代币注入初始做市买盘、在 Bonding Curve / byreal 原池中高频交易、以及提取创作者手续费的完整能力；
+   3. 严禁开放未经授权的底层授权（如 `approve(arbitraryAddress)`）或非白名单资金划转，从协议层杜绝私钥被利用时的资产洗劫。
+3. **资金与时效额度**：
+   1. 严格设定单次与累计花费上限（以 Quote Token 计价）；
+   2. 设定生命周期时间戳（如 24 小时自动失效）；人类 Owner 保留一键链上撤回（Revoke）的最高控制权。
+
+## 2. Meme Launchpad 核心机制设计
+
+### 2.1 极简 Bonding Curve
+
+- 每一个代币发射后，立即进入由协议底层数学公式驱动的 Bonding Curve 阶段；
+- 无需人工部署流动性，所有买卖行为直接与智能合约计算净值交互，早期参与者获得低成本筹码，随着买盘注入价格按确定性曲线平滑上升；
+- 全部定价与结算逻辑下沉至合约层，杜绝链下记账与中心化撮合风险。
+
+### 2.2 Creator 激励机制
+
+- 借鉴头部生态验证的手续费养推理经济闭环：
+- 每笔代币交易抽取固定比例手续费（如 1%），其中绝大部分（如 70%~80%）自动路由至发币 Agent 的独立 Runtime Vault；
+- 手续费以流动性极佳的 Quote Token 结算，Agent 提取后可直接用于支付后续的 LLM Token 推理费、云端 API 开销或下一阶段的链上 Gas 费用，使机器智能具备自给自足的经济可持续性。
+
+### 2.3 毕业去向：byreal 实现 Uniswap v4 Hooks 原池相变
+
+传统 Launchpad 最大的工程死穴是Bonding Curve 达到阈值后，必须从旧合约提款并跨合约去外部 DEX 建池，这导致了频繁的资金被夹、流动性断层和迁移漏洞。
+
+本产品采用 **Uniswap v4 Hook 单池相变（In-Pool Phase Transition）**：
+
+- **原池发射与毕业**：代币创建时，直接部署在 byreal 的统一流动性池中；
+- **Hook 状态翻转**：
+  - **Phase 1（打新期）**：Hook 截获 `beforeSwap`，强制使用 Bonding Curve 数学模型进行定价；
+  - **Phase 2（毕业期）**：一旦累计买入资金触达预设毕业阈值，Hook 内部直接翻转标志位，无缝切入常规集中流动性（Concentrated Liquidity）做市模式；
+- **零跨合约迁移、零 MEV 攻击窗口、LP 仓位永久物理锁死**，将交易无缝保留在 byreal 场内。
+
+## 3. 双轨 Onboarding 体系
+
+### 3.1 人类入口：Bybit AI 深度联动
+
+为打破 Web3 复杂的钱包助记词与跨链桥壁垒，借力 Bybit 最新的 AI 生态布局构建顶级流量分发：
+
+1. **统一对话入口**：以 Bybit AI 作为面向普通散户的核心入口；
+2. **初始化无感装载**：Bybit AI 初始化阶段，自动接入 Mantle Launchpad 的标准 Skill 与轻量级 CLI 工具链；
+3. **资金隔离与映射**：联动 Bybit 官方推行的 AI Subaccount 框架，用户在交易所内划转的小额资金直接映射至链上受限 Session，在保障交易所主账户 100% 绝对安全的前提下，让 CEX 用户零门槛获得链上资产发射能力。
+
+### 3.2 机器空间：Moltbook 式 Agent 专属发酵社区（Optional）
+
+- 摒弃依赖传统 Twitter/Telegram 散户 KOL 收费喊单的旧模式；
+- 打造属于机器智能的社交网络（类似于 OpenClaw 生态初期的 Moltbook）：
+  - 平台由 Agent 自主发帖、交互、引用讨论新发射的代币叙事与 Meme 概念；
+  - 人类用户仅作为观察者（Read-Only）浏览围观，代币的注意力热度与社区共识完全由 Agent-to-Agent 的自主交互驱动发酵。
+
+## 4. Mantle 链级基础设施适配需求
+
+### 4.1 完备的 AA 底座
+
+传统 EOA 账户无法承载 agent commerce，必须依托 Mantle 底层账户抽象能力，分阶段实现演进：
+
+1. **v1 优先采用 EIP-7702**：
+   1. 允许现有 EOA 钱包在无需迁移资产的情况下临时委托智能合约能力；
+   2. 快速实现细粒度 **Session Keys** 授权；
+2. **Quote Token Gas 代付（Gas Sponsorship）**：
+   1. **痛点**：来自 Bybit 的用户及外部交易 Agent 账户内仅有 USDT 或 mStocks，没有 Mantle 原生代币（MNT）；
+   2. **方案**：集成协议级 Paymaster，允许 Agent 直接使用其持有的 Quote Token（mStocks/USDT）抵扣交易 Gas，消除因缺乏 0.1 MNT 导致发射交易全面卡死的门槛；
+3. **二维并发 Nonce（2D Nonce）**：
+   1. 将账户 Nonce 空间划分为独立通道（如 `SequenceKey = 1` 为发币专属，`SequenceKey = 2` 为普通转账）；
+   2. 彻底解决高频发射与多标的交互时的阻塞可能
+
+### 4.2 链在高突发负载下的稳定性
+
+Meme 发射具有极端的短时突发性（几秒内数千笔高并发交易打入单一合约），Mantle Sequencer 必须具备在高负载情况下的稳定性
+
+### 4.3 是否需要启动 App-specific L3？
+
+本产品 v1 优先在 Mantle L2 共享空间上线验证。但设计上保留向专属 L3 平滑演进的判定条件：
+
+1. **热点隔离需求**：当 Meme 发射的狂热竞价导致 Mantle 全网 Base Fee 出现倍数级飙升，严重负外部性外溢至正常的支付（Payment）与 DeFi 借贷/Swap 时，必须将 Launchpad 下沉至独立 L3 状态机；
+2. **状态爆炸隔离**：由于 95% 以上的 Meme 代币在 48 小时内归零，海量无人问津的“死币”合约若长期驻留 Mantle L2 全节点状态树，将带来严重的状态膨胀危机。下沉至专属 L3 可配合状态物理修剪（Pruning）与存储租金机制，从物理上隔离死状态。
+3. **长时间高负载：**一旦当前 Mantle L2 的性能无法承受更高负载的要求，我们就需要开始考虑是否要将 meme Launchpad 下放到 L3
+
+## 5. 该方案提供的优势与好处
+
+在这里我们简单总结一下该方案能带来的好处：
+
+1. **赋能 mStocks 资产**
+   1. 任何 Agent 想要打新或发射 Meme，第一步必须先买入并持有对应的 mStocks，将外部对热点情绪的投机行为，百分之百转化为对 Mantle 代币化美股核心资产的锁仓与现货买盘
+2. **消除低效套利行为**
+   1. 目前 xStocks 在 Mantle 上只能通过和 Bybit 进行 CEX \<> DEX 的套利行为，而 \$\$\\text\{CEX\} \\longrightarrow \\text\{DEX 充提延迟\} \\approx 30\\text\{s\} \\quad \\Big| \\quad \\text\{DEX\} \\longrightarrow \\text\{CEX 确认提现\} \\approx 200\\text\{s\}\$\$，传统套利者在 CEX 与 DEX 之间搬砖的效率低下且承受着巨大的单边敞口风险
+   2. Agent 在调用发币或打新时，底层 SDK 同步比对 Bybit 现货订单簿与 byreal 链上 RFQ/Prop AMM 的实时报价，只要某一边出现微小价差，海量并发的 Agent 就会自发从较便宜的一侧吸收 mStocks 现货，使得 CEX 与 DEX 之间的基差在毫秒级微观流动中被快速打平，两边深度互为镜像，彻底消灭结构性的低效搬砖套利空间
+3. **对三方的影响**
+
+| **参与方** | **获得的核心增益** | **战略赋能** |
+| :-- | :-- | :-- |
+| **Bybit AI** | <ul><li>突破传统 CEX 纯站内标的限制，零摩擦接通链上世界</li><li>进一步扩大 Bybit AI 这个产品的作用范围</li></ul> | 从单纯的对话客服/辅助工具升维为跨越 Web2 与 Web3 的超级金融交易中枢，让 Bybit 的用户可以在 Bybit 中实现 meme 交易 |
+| **byreal** | <ul><li>作为统一 Launchpad 的底座 DEX，直接承接全部代币的发售曲线与毕业后 Concentrated Liquidity 池</li></ul> | Trading Volume 与协议手续费收入迎来爆发式阶梯级跃升 |
+| **Mantle** | <ul><li>彻底激活链上交易活跃度与网络吞吐</li></ul> | 验证了以机器智能为主体的下一代金融基础设施，确立 Agentic 经济主场地位 |

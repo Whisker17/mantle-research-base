@@ -31,14 +31,6 @@
         "tab": "Documentation",
         "pages": [
           {
-            "group": "Get Started",
-            "pages": [
-              "introduction",
-              "quickstart",
-              "concepts"
-            ]
-          },
-          {
             "group": "Knowledge Base",
             "pages": [
               {

@@ -46,7 +46,10 @@
                 "pages": [
                   {
                     "group": "Account Abstraction",
-                    "pages": []
+                    "pages": [
+                      "eip-8130-deep-dive",
+                      "eip-8141-deep-dive"
+                    ]
                   }
                 ]
               },
@@ -105,5 +108,8 @@
   },
   "footer": {
     "socials": {}
+  },
+  "styling": {
+    "latex": true
   }
 }

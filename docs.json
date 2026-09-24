@@ -47,8 +47,8 @@
                   {
                     "group": "Account Abstraction",
                     "pages": [
-                      "eip-8130-deep-dive",
-                      "eip-8141-deep-dive"
+                      "knowledge-base/blockchain-infra/account-abstraction/eip-8130-deep-dive",
+                      "knowledge-base/blockchain-infra/account-abstraction/eip-8141-deep-dive"
                     ]
                   }
                 ]
@@ -59,19 +59,19 @@
                   {
                     "group": "mStocks",
                     "pages": [
-                      "m-stocks"
+                      "knowledge-base/products/m-stocks"
                     ]
                   },
                   {
                     "group": "聚合器",
                     "pages": [
-                      "untitled-page-2"
+                      "knowledge-base/products/mm-quote-aggregator"
                     ]
                   },
                   {
                     "group": "meme Launchpad",
                     "pages": [
-                      "agentic-meme-launchpad"
+                      "knowledge-base/products/agentic-meme-launchpad"
                     ]
                   }
                 ]
@@ -87,21 +87,21 @@
                   {
                     "group": "References",
                     "pages": [
-                      "eip-8141-vs-eip-8130"
+                      "mantle-v3-roadmap/account-model/references/eip-8141-vs-eip-8130"
                     ]
                   },
-                  "agents"
+                  "mantle-v3-roadmap/account-model/agents-as-first-class-accounts"
                 ]
               },
               {
                 "group": "执行层/状态机设计",
                 "pages": [
-                  "untitled-page"
+                  "mantle-v3-roadmap/execution-layer/three-paths-analysis"
                 ]
               }
             ]
           },
-          "chain-infra"
+          "mantle-v3-roadmap/chain-infra"
         ]
       }
     ]
@@ -111,5 +111,43 @@
   },
   "styling": {
     "latex": true
-  }
+  },
+  "redirects": [
+    {
+      "source": "/eip-8130-deep-dive",
+      "destination": "/knowledge-base/blockchain-infra/account-abstraction/eip-8130-deep-dive"
+    },
+    {
+      "source": "/eip-8141-deep-dive",
+      "destination": "/knowledge-base/blockchain-infra/account-abstraction/eip-8141-deep-dive"
+    },
+    {
+      "source": "/m-stocks",
+      "destination": "/knowledge-base/products/m-stocks"
+    },
+    {
+      "source": "/untitled-page-2",
+      "destination": "/knowledge-base/products/mm-quote-aggregator"
+    },
+    {
+      "source": "/agentic-meme-launchpad",
+      "destination": "/knowledge-base/products/agentic-meme-launchpad"
+    },
+    {
+      "source": "/eip-8141-vs-eip-8130",
+      "destination": "/mantle-v3-roadmap/account-model/references/eip-8141-vs-eip-8130"
+    },
+    {
+      "source": "/agents",
+      "destination": "/mantle-v3-roadmap/account-model/agents-as-first-class-accounts"
+    },
+    {
+      "source": "/untitled-page",
+      "destination": "/mantle-v3-roadmap/execution-layer/three-paths-analysis"
+    },
+    {
+      "source": "/chain-infra",
+      "destination": "/mantle-v3-roadmap/chain-infra"
+    }
+  ]
 }
